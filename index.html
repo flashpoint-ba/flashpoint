@@ -887,10 +887,10 @@ tr:hover td{background:rgba(255,255,255,.012)}
 <!-- MODAL CALENDARIO -->
 <div class="m-ov" id="mCal"><div class="m-box">
   <button class="m-x" onclick="cM('mCal')">X</button>
-  <div class="m-title">Agregar al Calendario</div>
-  <div class="m-sub">Nombre del artista y fecha</div>
+  <div class="m-title" id="mCalTitle">Agregar al Calendario</div>
+  <div class="m-sub">Nombre del artista y mes</div>
   <div class="fg"><label class="fl">Nombre del Artista</label><input class="fi" id="calArtist" placeholder="Andrei Ciubuc"></div>
-  <div class="fg"><label class="fl">Fecha (opcional)</label><input class="fi" type="date" id="calDate"></div>
+  <div class="fg"><label class="fl">Mes (opcional)</label><input class="fi" type="month" id="calDate"></div>
   <button class="btn btn-red" style="width:100%;margin-top:9px" onclick="saveCalendar()">Agregar</button>
 </div></div>
 

@@ -49,6 +49,13 @@ function dbDelete(table,id){
     .catch(function(){return false;});
 }
 
+function dbPatch(table,id,data){
+  var h=getHJ();h['Prefer']='return=minimal';
+  return fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+id,{method:'PATCH',headers:h,body:JSON.stringify(data)})
+    .then(function(r){return r.ok;})
+    .catch(function(e){console.error('PATCH fail',e);return false;});
+}
+
 function dbUpsert(table,data){
   var h=getHJ();h['Prefer']='resolution=merge-duplicates,return=minimal';
   return fetch(SB_URL+'/rest/v1/'+table,{method:'POST',headers:h,body:JSON.stringify(data)})
@@ -246,15 +253,23 @@ function saveUbicacion(){
   });
 }
 
+var _editCalId=null;
+
 function rAdminCalendar(){
+  var months=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
   dbGet('calendar','select=*&order=date.asc').then(function(cal){
     var html='';
     if(cal.length){
       cal.forEach(function(e){
+        var label='Sin mes';
+        if(e.date){var p=e.date.split('-');label=(p[1]?months[parseInt(p[1])-1]:'')+(p[0]?' '+p[0]:'');}
         html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)">';
         html+='<div><strong style="font-size:15px">'+e.artist+'</strong>';
-        if(e.date)html+='<span style="color:var(--red);font-size:12px;margin-left:12px">'+e.date+'</span>';
-        html+='</div><button onclick="delCalendar(\''+e.id+'\')" class="btn btn-ghost btn-xs" style="color:var(--muted)">✕ Eliminar</button></div>';
+        html+='<span style="color:var(--red);font-size:12px;margin-left:12px">'+label+'</span></div>';
+        html+='<div style="display:flex;gap:8px">';
+        html+='<button onclick="editCalendar(\''+e.id+'\',\''+e.artist.replace(/'/g,"\\'")+'\',' +'\''+( e.date||'')+'\''+')" class="btn btn-ghost btn-xs">✎ Editar</button>';
+        html+='<button onclick="delCalendar(\''+e.id+'\')" class="btn btn-ghost btn-xs" style="color:var(--muted)">✕</button>';
+        html+='</div></div>';
       });
     } else {
       html='<div style="color:var(--muted);font-size:13px;padding:20px 0">Sin artistas. Usá el botón + para agregar.</div>';
@@ -263,13 +278,22 @@ function rAdminCalendar(){
   });
 }
 
+function editCalendar(id,artist,date){
+  _editCalId=id;
+  document.getElementById('mCalTitle').textContent='Editar Artista';
+  document.getElementById('calArtist').value=artist;
+  document.getElementById('calDate').value=date;
+  oM('mCal');
+}
+
 function saveCalendar(){
   var artist=document.getElementById('calArtist').value.trim();
   var date=document.getElementById('calDate').value;
   if(!artist){alert('Ingresá el nombre del artista');return;}
-  var id='cal'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-  dbInsert('calendar',{id:id,artist:artist,date:date,status:'upcoming'}).then(function(ok){
+  var done=function(ok){
     if(ok){
+      _editCalId=null;
+      document.getElementById('mCalTitle').textContent='Agregar al Calendario';
       document.getElementById('calArtist').value='';
       document.getElementById('calDate').value='';
       cM('mCal');
@@ -278,7 +302,13 @@ function saveCalendar(){
     } else {
       alert('Error al guardar. Verificá que estés logueado.');
     }
-  });
+  };
+  if(_editCalId){
+    dbPatch('calendar',_editCalId,{artist:artist,date:date}).then(done);
+  } else {
+    var id='cal'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    dbInsert('calendar',{id:id,artist:artist,date:date,status:'upcoming'}).then(done);
+  }
 }
 
 function delCalendar(id){
@@ -329,8 +359,10 @@ function loadPublic(){
     if(cal.length){
       cal.forEach(function(e){
         var p=e.date?e.date.split('-'):[];
-        var day=p[2]||'--';
-        var mon=p[1]?months[parseInt(p[1])-1]:'--';
+        var day,mon;
+        if(p.length===3){day=p[2];mon=months[parseInt(p[1])-1];}
+        else if(p.length===2){day=months[parseInt(p[1])-1];mon=p[0];}
+        else{day='--';mon='--';}
         html+='<div class="upcoming-item is-visible">';
         html+='<div><div class="upcoming-date">'+day+'</div><div class="upcoming-month">'+mon+'</div></div>';
         html+='<div class="upcoming-divider"></div>';
