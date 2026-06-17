@@ -361,7 +361,7 @@ function loadPublic(){
         var p=e.date?e.date.split('-'):[];
         var day,mon;
         if(p.length===3){day=p[2];mon=months[parseInt(p[1])-1];}
-        else if(p.length===2){day=months[parseInt(p[1])-1];mon=p[0];}
+        else if(p.length===2){day=months[parseInt(p[1])-1];mon='';}
         else{day='--';mon='--';}
         html+='<div class="upcoming-item is-visible">';
         html+='<div><div class="upcoming-date">'+day+'</div><div class="upcoming-month">'+mon+'</div></div>';
