@@ -303,11 +303,12 @@ function saveCalendar(){
       alert('Error al guardar. Verificá que estés logueado.');
     }
   };
+  var dateVal=date?(date.length===7?date+'-01':date):'';
   if(_editCalId){
-    dbPatch('calendar',_editCalId,{artist:artist,date:date}).then(done);
+    dbPatch('calendar',_editCalId,{artist:artist,date:dateVal}).then(done);
   } else {
     var id='cal'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-    dbInsert('calendar',{id:id,artist:artist,date:date,status:'upcoming'}).then(done);
+    dbInsert('calendar',{id:id,artist:artist,date:dateVal,status:'upcoming'}).then(done);
   }
 }
 
@@ -359,18 +360,26 @@ function loadPublic(){
     if(cal.length){
       cal.forEach(function(e){
         var p=e.date?e.date.split('-'):[];
-        var day,mon;
-        if(p.length===3){day=p[2];mon=months[parseInt(p[1])-1];}
-        else if(p.length===2){day=months[parseInt(p[1])-1];mon='';}
-        else{day='--';mon='--';}
+        var dateCol;
+        if(p.length===3&&p[2]!=='01'){
+          var day=parseInt(p[2],10);
+          var mon=months[parseInt(p[1],10)-1];
+          dateCol='<div class="upcoming-date">'+day+'</div><div class="upcoming-month">'+mon+'</div>';
+        } else if(p.length===3||p.length===2){
+          var mon=months[parseInt(p[1],10)-1];
+          dateCol='<div class="upcoming-date" style="font-size:1.1rem;letter-spacing:.12em;">'+mon+'</div><div class="upcoming-month">&nbsp;</div>';
+        } else {
+          // sin fecha: badge "PRÓX" discreto
+          dateCol='<div class="upcoming-date" style="font-size:.85rem;letter-spacing:.15em;opacity:.45;">PRÓX</div><div class="upcoming-month">&nbsp;</div>';
+        }
         html+='<div class="upcoming-item is-visible">';
-        html+='<div><div class="upcoming-date">'+day+'</div><div class="upcoming-month">'+mon+'</div></div>';
+        html+='<div>'+dateCol+'</div>';
         html+='<div class="upcoming-divider"></div>';
         html+='<div class="upcoming-info"><div class="upcoming-artist">'+e.artist+'</div><div class="upcoming-venue">Próximamente</div></div>';
         html+='<div class="upcoming-status" style="border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.3);">TBA</div></div>';
       });
     } else {
-      html='<div class="upcoming-item is-visible" style="opacity:0.3;"><div><div class="upcoming-date">--</div><div class="upcoming-month">PRÓX</div></div><div class="upcoming-divider"></div><div class="upcoming-info"><div class="upcoming-artist">Próximamente</div><div class="upcoming-venue">Por confirmar</div></div><div class="upcoming-status" style="border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.2);">TBA</div></div>';
+      html='<div class="upcoming-item is-visible" style="opacity:0.3;"><div><div class="upcoming-date" style="font-size:.85rem;letter-spacing:.15em;">PRÓX</div><div class="upcoming-month">&nbsp;</div></div><div class="upcoming-divider"></div><div class="upcoming-info"><div class="upcoming-artist">Próximamente</div><div class="upcoming-venue">Por confirmar</div></div><div class="upcoming-status" style="border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.2);">TBA</div></div>';
     }
     listEl.innerHTML=html;
   }).catch(function(e){console.error('Calendar load error',e);});
