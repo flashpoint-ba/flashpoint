@@ -367,7 +367,8 @@ function loadPublic(){
           dateCol='<div class="upcoming-date">'+day+'</div><div class="upcoming-month">'+mon+'</div>';
         } else if(p.length===3||p.length===2){
           var mon=months[parseInt(p[1],10)-1];
-          dateCol='<div class="upcoming-date" style="font-size:1.1rem;letter-spacing:.12em;">'+mon+'</div><div class="upcoming-month">&nbsp;</div>';
+          var yr="'"+p[0].slice(2);
+          dateCol='<div class="upcoming-date" style="font-size:1.1rem;letter-spacing:.12em;">'+mon+'</div><div class="upcoming-month">'+yr+'</div>';
         } else {
           // sin fecha: badge "PRÓX" discreto
           dateCol='<div class="upcoming-date" style="font-size:.85rem;letter-spacing:.15em;opacity:.45;">PRÓX</div><div class="upcoming-month">&nbsp;</div>';
